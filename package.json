@@ -4,8 +4,7 @@
     "description": "",
     "scripts": {
         "start": "npm --prefix ./backend start",
-        "install": "npm  --prefix ./backend install && npm --prefix ./frontend install react-scripts",
-        "build" : "npm --prefix ./frontend run build"
+        "install": "npm  --prefix ./backend install"
     },
     "repository": {
         "type": "git",
