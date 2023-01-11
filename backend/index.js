@@ -1,29 +1,13 @@
 import express, { request, response } from "express";
-import morgan, { token } from "morgan";
 import cors from "cors";
 
 
 
 const app = express()
-morgan.token( 'data', (req, res) => JSON.stringify(req.body) )
-
 app.use(express.json())
 app.use(express.static('../frontend/build'))
 app.use(cors())
-app.use(morgan( (tokens, req, res) => {
-    let content = [
-        tokens.method(req, res),
-        tokens.url(req, res),
-        tokens.status(req, res),
-        tokens.res(req, res, 'content-length'), '-',
-        tokens['response-time'](req, res), 'ms',
-    ]
-    if ( ["POST", "PATCH", "PUT"].includes(req.method) )
-        content.push(tokens.data(req, res))
-    
-    return content.join(' ')
 
-} ))
 
 let persons = [
     { 
