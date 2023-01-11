@@ -1,0 +1,20 @@
+{
+    "name": "fullstackopen-phonebook",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "build": "echo \"No build specified\" && exit 1",
+        "test": "echo \"No test specified\" && exit 1",
+        "start": "node backend/index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/enzoBrum/fullstackopen-phonebook.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/enzoBrum/fullstackopen-phonebook/issues"
+    },
+    "homepage": "https://github.com/enzoBrum/fullstackopen-phonebook#readme"
+}
