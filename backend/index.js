@@ -8,6 +8,7 @@ const app = express()
 morgan.token( 'data', (req, res) => JSON.stringify(req.body) )
 
 app.use(express.json())
+app.use(express.static('../frontend/build'))
 app.use(cors())
 app.use(morgan( (tokens, req, res) => {
     let content = [
@@ -48,42 +49,43 @@ let persons = [
 ]
 
 
-app.get('/info', (request, response) => {
-    response.send(
+
+app.get('/info', (req, res) => {
+    res.send(
         `<p>Phonebook has info for ${persons.length} people</p>\n` +
         `<p>${new Date()}</p>\n`
     )
 })
 
-app.get('/api/persons', (request, response) => {
-    response.json(persons)
+app.get('/api/persons', (req, res) => {
+    res.json(persons)
 })
 
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number( request.params.id)
+app.get('/api/persons/:id', (req, res) => {
+    const id = Number( req.params.id)
     const person = persons.find( p => p.id === id)
 
     if (person)
-        response.json(person)
+        res.json(person)
     else
-        response.status(404).end()
+        res.status(404).end()
 })
 
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
+app.delete('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id)
     persons = persons.filter( p => p.id !== id )
-    response.status(204).end()
+    res.status(204).end()
 })
 
-app.post('/api/persons', (request, response) => {
-    const person = request.body
+app.post('/api/persons', (req, res) => {
+    const person = req.body
     if ( person.name && person.number && !persons.find(p=>p.name === person.name) )
     {
         person.id = Math.ceil( Math.random()*1e6 )
         persons.push(person)
-        response.json(person)
+        res.json(person)
     }
 
     else
@@ -96,7 +98,7 @@ app.post('/api/persons', (request, response) => {
         else if ( persons.find(p=>p.name===person.name) )
             info = "The name already exists in the phonebook"
         
-        response.status(400).json({
+        res.status(400).json({
             error: info
         })
     }
