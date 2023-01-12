@@ -4,7 +4,7 @@
     "description": "",
     "scripts": {
         "start": "npm --prefix ./backend start",
-        "install": "npm  --prefix ./backend install"
+        "install": "npm --loglevel=verbose --prefix ./backend install"
     },
     "repository": {
         "type": "git",
