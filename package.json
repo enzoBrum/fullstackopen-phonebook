@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "",
     "scripts": {
-        "start": "npm --loglevel=verbose --prefix  ./backend start",
+        "start": "npm  --prefix  ./backend start",
         "install": "npm  --prefix ./backend install"
     },
     "repository": {

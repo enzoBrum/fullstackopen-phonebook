@@ -6,29 +6,6 @@ import axios from 'axios'
 import personService from './services/persons'
 import Message from './components/Message'
 
-// this is so ugly :(
-// sadly im to tired to care...
-
-const containSubstringFromStart = (value, string) => {
-  if (typeof(string) !== "string")
-    return false
-  
-  value = value.toLowerCase().trim()
-  string = string.toLowerCase()
-  
-  if (!value) return true
-
-  for (let i = 0; i < string.length; i++) {
-    if ( value[i] !== string[i] )
-      return false;
-
-    if ( i+1 === value.length )
-      return true;
-  }
-}
-
-
-
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -67,9 +44,10 @@ const App = () => {
       .then(() => 
         setPersons(persons.filter( (p) => p.id !== id ))
       )
-      .catch(() => {
-        setMessage({text: `information about ${name} has already been removed from server`, color:'red'})
+      .catch((e) => {
+        setMessage({text: e.message.response.data.error, color:'red'})
         err = true
+        console.log(e.message.response.data.error)
       })
 
       if (!err)
@@ -105,9 +83,10 @@ const App = () => {
           setNewName('')
           setNewPhone('')
         })
-        .catch(() => {
-          setMessage({text: `information about ${personFound.name} has already been removed from server`, color:'red'})
+        .catch((e) => {
+          setMessage({text: e.message.response.data.error, color:'red'})
           err = true
+          console.log(e.message.response.data.error)
         })
 
         if (!err) {
@@ -131,9 +110,10 @@ const App = () => {
         setNewName("")
         setNewPhone('')
       } )
-      .catch(() => {
-        setMessage({text: `information about ${newName} has already been removed from server`, color:'red'})
+      .catch((e) => {
+        setMessage({text: e.message.response.data.error, color:'red'})
         err = true
+        console.log(e.message.response.data.error)
       })
     
     if (!err)
@@ -156,7 +136,7 @@ const App = () => {
 
   const persons_shown = persons.filter( 
                                         (p)=> 
-                                          containSubstringFromStart(search, p.name) 
+                                          search.startsWith(p) 
                                       );  
   
 
