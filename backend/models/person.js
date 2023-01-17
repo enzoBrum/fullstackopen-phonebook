@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+
 
 dotenv.config();
-mongoose.set('strictQuery', true)
+mongoose.set("strictQuery", true);
 
 const personSchema = new mongoose.Schema({
     name: {
@@ -25,22 +26,22 @@ const personSchema = new mongoose.Schema({
         }
     },
 });
-personSchema.set('toJSON', {
+personSchema.set("toJSON", {
     transform: (document, obj) => {
         obj.id = obj._id.toString();
         delete obj._id;
         delete obj.__v;
     }
 });
-const Person = mongoose.model('Person', personSchema);
+const Person = mongoose.model("Person", personSchema);
 
 const url = process.env.MONGODB_URL;
-console.log(`connecting to ${url}`)
+console.log(`connecting to ${url}`);
 const connect = () => {
     return (
         mongoose
             .connect(url)
-            .then( ()=> console.log(`connected to MongDB`) )
+            .then( () => console.log("connected to MongDB") )
             .catch( err => console.log(err.message) )
     );    
 };
