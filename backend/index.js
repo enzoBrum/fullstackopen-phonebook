@@ -1,94 +1,141 @@
-import express, { request, response } from "express";
+import express from "express";
 import cors from "cors";
+import dotenv from 'dotenv';
+import db from "./models/person.js";
+import morgan from "morgan";
 
 
 
+
+const errorHandler = (err, req, res, next) => {
+    console.error(err.message)
+
+    if (err.name === 'CastError')
+        return res.status(400).send({ error: 'malformatted id' })
+    else if (err.name === 'ValidationError')
+        return res.status(400).send({error: err.message})
+
+    next(err)
+}
+
+const unknownEndpoint = (req, res) => res.status(404).send({error: 'unknown endpoint'})
+                                
+
+morgan.token( 'data', (req, res) => JSON.stringify(req.body) )
+
+dotenv.config();
 const app = express()
-app.use(express.json())
 app.use(express.static('../frontend/build'))
+app.use(express.json())
 app.use(cors())
+app.use(morgan( (tokens, req, res) => {
+    let content = [
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens.res(req, res, 'content-length'), '-',
+        tokens['response-time'](req, res), 'ms',
+    ]
+    if ( ["POST", "PATCH", "PUT"].includes(req.method) )
+        content.push(tokens.data(req, res))
 
+    return content.join(' ')
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
-
-
+} ))
 
 app.get('/info', (req, res) => {
-    res.send(
-        `<p>Phonebook has info for ${persons.length} people</p>\n` +
-        `<p>${new Date()}</p>\n`
+    db.Person.estimatedDocumentCount().then(
+        n => 
+            res.status(200).send(
+                `<p>Phonebook has info for ${n} people</p>\n` +
+                `<p>${new Date()}</p>\n`
+            )
     )
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    db.Person.find({}).then(
+        persons => res.status(200).json(persons)
+    )
+    .catch(e => console.log(e.message))
 })
 
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number( req.params.id)
-    const person = persons.find( p => p.id === id)
-
-    if (person)
-        res.json(person)
-    else
-        res.status(404).end()
+app.get('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id;
+    db.Person.findById(id).then(
+        person => {
+            if (person)
+                res.status(200).json(person);
+            else
+                res.status(404).end();
+        }
+    )
+    .catch(
+        err => next(err)
+    )
 })
 
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter( p => p.id !== id )
-    res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+    db.Person.findByIdAndDelete(req.params.id)
+        .then(
+            result => res.status(204).end()
+        )
+        .catch(err => next(err))
 })
 
-app.post('/api/persons', (req, res) => {
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const {name, number} = req.body
+    const person = {
+        name: name,
+        number: number
+    }
+
+    db.Person.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true, context: 'query' })
+        .then( 
+            p => res.status(200).json(p)
+        )
+        .catch(err => next(err))
+
+})
+
+app.post('/api/persons', (req, res, next) => {
     const person = req.body
-    if ( person.name && person.number && !persons.find(p=>p.name === person.name) )
-    {
-        person.id = Math.ceil( Math.random()*1e6 )
-        persons.push(person)
-        res.json(person)
-    }
-
-    else
-    {
-        let info;
-        if (!person.name)
-            info = "name is missing"
-        else if (!person.number)
-            info = "number is missing"
-        else if ( persons.find(p=>p.name===person.name) )
-            info = "The name already exists in the phonebook"
-        
-        res.status(400).json({
-            error: info
+    const newPerson = new db.Person(person);
+    
+    db.Person.find({ name: person.name })
+        .then(p => {
+            if (p[0])
+                res.status(409).send({error: "A person with the same name already exists in the phonebook"})
+            else 
+            {
+                newPerson
+                    .save()
+                    .then(
+                        p => res.status(200).json(p)
+                    )
+                    .catch(
+                        err => next(err)
+            )}
         })
-    }
+        .catch(err => next(err))
 })
+
+app.use(unknownEndpoint)
+app.use(errorHandler)
+
 
 const PORT =  process.env.PORT || 3001
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})
+
+// connect to db before app.listen() because cyclic says so
+db
+    .connect()
+    .then(
+        () => 
+            app.listen(PORT, () => 
+                console.log(`Server running on port ${PORT}`)
+            )
+    )
+

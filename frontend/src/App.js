@@ -16,7 +16,7 @@ const App = () => {
     text: null,
     color: 'black'
   })
-
+  const [persons_shown, setShown] = useState([])
   
   useEffect(
     () => {
@@ -25,6 +25,9 @@ const App = () => {
       .then( (personsReceived) => {
         setPersons(personsReceived)
       })
+      .catch(
+        e => console.log(e.response)
+      )
       
     }, [])
   
@@ -34,7 +37,6 @@ const App = () => {
   
   const eraseHandler = (id, name) =>
     () => {
-      const err = false
       const r = window.confirm(`delete ${name}?`)
       if (!r)
         return
@@ -44,24 +46,24 @@ const App = () => {
       .then(() => 
         setPersons(persons.filter( (p) => p.id !== id ))
       )
-      .catch((e) => {
-        setMessage({text: e.message.response.data.error, color:'red'})
-        err = true
-        console.log(e.message.response.data.error)
-      })
-
-      if (!err)
-      {
+      .then(() => {
         const mem = {
           text: `Deleted ${name}`,
           color: 'darkred'
         }
         setMessage(mem)
-      }
-
-      setTimeout(
-        () => setMessage({...message, text: null}),
-        5000
+      })
+      .catch((e) => {
+        setMessage({text: e.response.data.error, color:'red'})
+        console.log(e.response.data.error)
+      })
+      .finally(
+        () => {
+          setTimeout(
+            () => setMessage({...message, text: null}),
+            8000
+          )
+        }
       )
     }
   
@@ -69,7 +71,6 @@ const App = () => {
     event.preventDefault()
     
     const personFound = persons.find( (p) => p.name === newName )
-    const err = false
     if (personFound !== undefined )
     {
       const r  = window.confirm(`${personFound.name} is already adde to phonebook, replace old number with new one?`)
@@ -83,62 +84,59 @@ const App = () => {
           setNewName('')
           setNewPhone('')
         })
-        .catch((e) => {
-          setMessage({text: e.message.response.data.error, color:'red'})
-          err = true
-          console.log(e.message.response.data.error)
-        })
-
-        if (!err) {
+        .then( () => {
           const mem = {
             text: `Changed number of ${personFound.name}`,
             color: 'darkblue'
           }
           setMessage(mem)
-        }
+        })
+        .catch((e) => {
+          setMessage({text: e.response.data.error, color:'red'})
+          console.log(e.response.data.error)
+        })
+        .finally(
+          () => setTimeout(
+            () => setMessage({...message, text: null}),
+            8000
+          ))
       }
-      
     }
     else 
     {      
       const new_person = { name: newName, number: newPhone }
 
       personService
-      .create(new_person)
-      .then( (response) => {
-        setPersons(persons.concat(response))
-        setNewName("")
-        setNewPhone('')
-      } )
-      .catch((e) => {
-        setMessage({text: e.message.response.data.error, color:'red'})
-        err = true
-        console.log(e.message.response.data.error)
-      })
-    
-    if (!err)
-    {
-      const mem = {
-        text: `Added ${newName}`,
-        color: 'darkgreen'
-      }
-      setMessage(mem)
-    }
-    }
-    setTimeout(
-      () => setMessage({...message, text: null}),
-      5000
-    )
+        .create(new_person)
+        .then( (response) => {
+          setPersons(persons.concat(response))
+          setNewName("")
+          setNewPhone('')
+        } )
+        .then( () =>  {
+            const mem = {
+              text: `Added ${newName}`,
+              color: 'darkgreen'
+            }
+            setMessage(mem)
+          }
+        ) 
+        .catch((e) => {
+          setMessage({text: e.response.data.error, color:'red'})
+          console.log(e.response.data.error, e.message)
+        })
+        .finally(
+          () => setTimeout(
+            () => setMessage({...message, text: null}),
+            8000
+          ))
+  } 
+}
+  useEffect(
+    () => setShown(persons.filter(p =>  p.name.toLowerCase().startsWith(search.toLowerCase()))),
+    [search, persons]
+  )
 
-  }
-  
-
-
-  const persons_shown = persons.filter( 
-                                        (p)=> 
-                                          search.startsWith(p) 
-                                      );  
-  
 
   return (
     <div>

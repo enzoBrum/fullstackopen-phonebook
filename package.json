@@ -4,7 +4,8 @@
     "description": "",
     "scripts": {
         "start": "npm  --prefix  ./backend start",
-        "install": "npm  --prefix ./backend install"
+        "install": "npm  --prefix ./backend install",
+        "local": "npm --prefix ./frontend start & npm --prefix ./backend run dev"
     },
     "repository": {
         "type": "git",
